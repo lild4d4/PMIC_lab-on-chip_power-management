@@ -112,7 +112,7 @@ XM6 VDD net18 inn GND sky130_fd_pr__nfet_g5v0d10v5 L=0.5 W=3 nf=1 ad='int((nf+1)
 R10 ldo_out GND {R}
 IL ldo_out 0 PWL(0 0.1m 10u 0.1m 20u 10m 30u 10m)
 *CL ldo_out gnd 10p
-.lib sky130.lib.spice tt
+.lib /content/conda-env/share/pdk/sky130A/libs.tech/ngspice/sky130.lib.spice tt
 
 
 
@@ -144,7 +144,7 @@ alter IL 0
 dc temp 85 0 -1
 let temp_coeff=1000000*(max(ldo_out)-min(ldo_out))/85
 print temp_coeff
-plot v(ldo_out)
+*plot v(ldo_out)
 set wr_singlescale
 set wr_vecnames
 set appendwrite
@@ -174,8 +174,8 @@ alter IL 0
 alter Vs AC =0
 alter Vt AC=1
 ac dec 10 1 1G
-plot vdb(out)
-plot (180/pi)*vp(out)
+*plot vdb(out)
+*plot (180/pi)*vp(out)
 let ph= (180/pi)*vp(out)
 meas ac pm FIND ph WHEN vdb(out)=0
 .endc
@@ -191,7 +191,7 @@ alter C2 0
 ac dec 10 1 1G
 meas AC PSRR100 FIND vdb(ldo_out) AT=100
 meas AC PSRR100k FIND vdb(ldo_out) AT=100k
-plot vdb(ldo_out)
+*plot vdb(ldo_out)
 .endc
 
 
@@ -201,7 +201,7 @@ plot vdb(ldo_out)
 .control
 alter IL 0
 dc Vs 2.8 0 -0.01
-plot vdd ldo_out
+*plot vdd ldo_out
 meas DC Vldo_Sup_2 FIND ldo_out AT=2
 meas DC Vldo_nom FIND ldo_out AT=2.3
 meas DC Vldo_Sup_2_8 FIND ldo_out AT=2.8
@@ -231,7 +231,7 @@ set appendwrite
 *.control
 *alter R10 1G
 *tran 0.1u 90u
-*plot v(ldo_out) v(c1) v(c2)
+**plot v(ldo_out) v(c1) v(c2)
 *meas TRAN V_ldo_100u FIND v(ldo_out) AT=10u
 *meas TRAN V_ldo_10m FIND v(ldo_out) AT=50u
 *let load_reg= V_ldo_100u-V_ldo_10m
@@ -249,7 +249,7 @@ meas TRAN V_ldo_10m FIND v(ldo_out) AT=100u
 let load_reg= V_ldo_100u-V_ldo_10m
 let load_current =(-1*i(Vs)-131.8e-6)
 print load_reg
-plot load_current v(ldo_out)-1.8
+*plot load_current v(ldo_out)-1.8
 .endc
 
 
@@ -260,7 +260,7 @@ alter @IL[PWL] = [ 0 0 10u 0 20u 0 30u 0 ]
 alter @Vs[pulse] = [ 1 3 10u 10u 1u 100u 200u ]
 alter IL 0
 tran 0.1u 100u
-plot vdd ldo_out
+*plot vdd ldo_out
 .endc
 
 .control
@@ -268,7 +268,7 @@ alter R10 36k
 alter @IL[PWL] = [ 0 0 10u 0 20u 0 30u 0 ]
 alter @Vs[pulse] = [ 0 2.3 10u 0.1u 1u 100u 200u ]
 tran 0.1u 100u
-plot vdd ldo_out
+*plot vdd ldo_out
 .endc
 
 .control
@@ -277,7 +277,7 @@ alter @IL[PWL] = [ 0 0 10u 0 20u 0 30u 0 ]
 alter @Ven[pulse] = [ 0 2.3 10u 0.1u 1u 100u 200u ]
 tran 0.1u 100u
 *meas TRAN st_up_time when v(ldo_out)>1.782
-plot en ldo_out
+*plot en ldo_out
 .endc
 
 
@@ -288,4 +288,6 @@ plot en ldo_out
 **.ends
 .GLOBAL GND
 .GLOBAL VDD
+set wr_singlescale
+wrdata output.txt V(ldo_out)
 .end
