@@ -1,0 +1,3 @@
+[submodule "LDO/caravel_user_project_ldo"]
+	path = LDO/caravel_user_project_ldo
+	url = https://github.com/mabrains/caravel_user_project_ldo
