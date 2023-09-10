@@ -112,7 +112,7 @@ XM6 VDD net18 inn GND sky130_fd_pr__nfet_g5v0d10v5 L=0.5 W=3 nf=1 ad='int((nf+1)
 R10 ldo_out GND {R}
 IL ldo_out 0 PWL(0 0.1m 10u 0.1m 20u 10m 30u 10m)
 *CL ldo_out gnd 10p
-.lib sky130.lib.spice tt
+.lib /content/conda-env/share/pdk/sky130A/libs.tech/ngspice/sky130.lib.spice tt
 
 
 
@@ -130,56 +130,57 @@ IL ldo_out 0 PWL(0 0.1m 10u 0.1m 20u 10m 30u 10m)
 *.nodeset v(net7)=0.75
 .nodeset v(vb)=0.9
 
-.option temp=27
-*User_defined_functions
-.control
-define max(vector_name) (vecmax(vector_name))
-define min(vector_name) (vecmin(vector_name))
-.endc
+* .option temp=27
+* *User_defined_functions
+* .control
+* define max(vector_name) (vecmax(vector_name))
+* define min(vector_name) (vecmin(vector_name))
+* .endc
 
 
 *Temp_sweep
-.control
-alter IL 0
-dc temp 85 0 -1
-let temp_coeff=1000000*(max(ldo_out)-min(ldo_out))/85
-print temp_coeff
-plot v(ldo_out)
-set wr_singlescale
-set wr_vecnames
-set appendwrite
-.endc
+* .control
+* alter IL 0
+* dc temp 85 0 -1
+* let temp_coeff=1000000*(max(ldo_out)-min(ldo_out))/85
+* print temp_coeff
+* *plot v(ldo_out)
+* set wr_singlescale
+* set wr_vecnames
+* set appendwrite
+* .endc
 
 
-.control
-alter IL 0
-*alter R10 1G
-op
-let iq =i(Vs)
-print iq
-*print all
-set wr_singlescale
-set wr_vecnames
-set appendwrite
-if v(ldo_out)>1
-wrdata op_point_test v(ldo_out)
-end
-.endc
-
-
+*.control
+*alter IL 0
+**alter R10 1G
+*op
+*let iq =i(Vs)
+*print iq
+**print all
+*set wr_singlescale
+*set wr_vecnames
+*set appendwrite
+*if v(ldo_out)>1
+*set wr_singlescale
+*set wr_vecnames
+*set appendwrite
+*end
+*.endc
 
 *Stability_Analysis
 .control
 alter IL 0
-alter Vs AC =0
+alter Vs AC=0
 alter Vt AC=1
 ac dec 10 1 1G
-plot vdb(out)
-plot (180/pi)*vp(out)
-let ph= (180/pi)*vp(out)
+set wr_singlescale
+set wr_vecnames
+set appendwrite
+wrdata Stability_Analysis.txt vdb(out)
+let ph=(180/pi)*vp(put)
 meas ac pm FIND ph WHEN vdb(out)=0
 .endc
-
 
 *PSRR_Analysis
 .control
@@ -191,17 +192,18 @@ alter C2 0
 ac dec 10 1 1G
 meas AC PSRR100 FIND vdb(ldo_out) AT=100
 meas AC PSRR100k FIND vdb(ldo_out) AT=100k
-plot vdb(ldo_out)
+*plot vdb(ldo_out)
+set wr_singlescale
+set wr_vecnames
+set appendwrite
+wrdata PSRR_Analysis.txt vdb(ldo_out)
 .endc
-
-
-
 
 *supply_sweep
 .control
 alter IL 0
 dc Vs 2.8 0 -0.01
-plot vdd ldo_out
+*plot vdd ldo_out
 meas DC Vldo_Sup_2 FIND ldo_out AT=2
 meas DC Vldo_nom FIND ldo_out AT=2.3
 meas DC Vldo_Sup_2_8 FIND ldo_out AT=2.8
@@ -213,76 +215,21 @@ print dropout
 set wr_singlescale
 set wr_vecnames
 set appendwrite
+wrdata supply_sweep.txt V(ldo_out)
 .endc
-
-
-
-
-
-*Load_Reg_switches
-*V1 c1 0 DC 0 PWL(0 5 20u 5 35u 0 50u 0 100u 0)
-*V2 c2 0 DC 0 PWL(0 0 20u 0 35u 0 50u 5 100u 5)
-*s1 ldo_out 2 c1 0 switch1 ON
-*s2 ldo_out 3 c2 0 switch1 OFF
-*.model switch1 sw vt=0.1 ron =0.1 roff =1G
-*R1 2 0 18k
-*R2 3 0 180
-
-*.control
-*alter R10 1G
-*tran 0.1u 90u
-*plot v(ldo_out) v(c1) v(c2)
-*meas TRAN V_ldo_100u FIND v(ldo_out) AT=10u
-*meas TRAN V_ldo_10m FIND v(ldo_out) AT=50u
-*let load_reg= V_ldo_100u-V_ldo_10m
-*print load_reg
-*.endc
-
-
-**Load_Transient
-.control
-alter IL 50u
-alter R10 3600k
-tran 0.1u 100u
-meas TRAN V_ldo_100u FIND v(ldo_out) AT=5u
-meas TRAN V_ldo_10m FIND v(ldo_out) AT=100u
-let load_reg= V_ldo_100u-V_ldo_10m
-let load_current =(-1*i(Vs)-131.8e-6)
-print load_reg
-plot load_current v(ldo_out)-1.8
-.endc
-
 
 **Transient
 .control
 alter R10 36k
 alter @IL[PWL] = [ 0 0 10u 0 20u 0 30u 0 ]
-alter @Vs[pulse] = [ 1 3 10u 10u 1u 100u 200u ]
+alter @Vs[pulse] = [ 1 3 10u 10u 1u 100u 200u]
 alter IL 0
 tran 0.1u 100u
-plot vdd ldo_out
+set wr_singlescale
+set wr_vecnames
+set appendwrite
+wrdata Transient.txt  vdd V(ldo_out)
 .endc
-
-.control
-alter R10 36k
-alter @IL[PWL] = [ 0 0 10u 0 20u 0 30u 0 ]
-alter @Vs[pulse] = [ 0 2.3 10u 0.1u 1u 100u 200u ]
-tran 0.1u 100u
-plot vdd ldo_out
-.endc
-
-.control
-alter R10 36k
-alter @IL[PWL] = [ 0 0 10u 0 20u 0 30u 0 ]
-alter @Ven[pulse] = [ 0 2.3 10u 0.1u 1u 100u 200u ]
-tran 0.1u 100u
-*meas TRAN st_up_time when v(ldo_out)>1.782
-plot en ldo_out
-.endc
-
-
-
-
 
 **** end user architecture code
 **.ends

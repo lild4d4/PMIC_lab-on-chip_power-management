@@ -1,0 +1,3 @@
+echo $PDK
+echo $PDKPATH
+echo $STD_CELL_LIBRARY
